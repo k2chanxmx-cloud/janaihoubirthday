@@ -134,21 +134,30 @@ def add_watermark(image_bytes: bytes) -> bytes:
 
 
 def extract_generated_image(response) -> bytes:
-    """Geminiの応答から最初の生成画像をJPEGバイト列として取り出します。"""
+    """Geminiの応答から最終生成画像をJPEGバイト列として取り出します。"""
+    image_parts = []
+
     for part in response.parts or []:
-        if part.inline_data is None:
+        inline_data = getattr(part, "inline_data", None)
+        if inline_data is None or not getattr(inline_data, "data", None):
             continue
 
-        generated = part.as_image()
-        if generated is None:
-            continue
+        # Gemini 3系では途中の思考画像が含まれる場合があるため、
+        # 通常出力を優先しつつ、最後の画像を採用します。
+        image_parts.append(part)
 
-        generated = generated.convert("RGB")
+    if not image_parts:
+        raise RuntimeError("Geminiから画像が返されませんでした。")
+
+    final_part = image_parts[-1]
+    raw_bytes = final_part.inline_data.data
+
+    # SDKのtypes.Imageではなく、画像バイト列をPillowで開く。
+    with Image.open(io.BytesIO(raw_bytes)) as generated:
+        generated_rgb = generated.convert("RGB")
         output = io.BytesIO()
-        generated.save(output, format="JPEG", quality=94)
+        generated_rgb.save(output, format="JPEG", quality=94, optimize=True)
         return output.getvalue()
-
-    raise RuntimeError("Geminiから画像が返されませんでした。")
 
 
 @app.get("/")
