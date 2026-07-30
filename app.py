@@ -102,9 +102,13 @@ def add_watermark(image_bytes: bytes) -> bytes:
 
     text = "じゃない方  Birthday 2026"
     font_size = max(22, image.width // 32)
+
+    font_path = BASE_DIR / "fonts" / "NotoSansJP-VariableFont_wght.ttf"
+
     try:
-        font = ImageFont.truetype("DejaVuSans.ttf", font_size)
+        font = ImageFont.truetype(str(font_path), font_size)
     except OSError:
+        app.logger.warning(f"フォントが見つかりません: {font_path}")
         font = ImageFont.load_default()
 
     bbox = draw.textbbox((0, 0), text, font=font)
