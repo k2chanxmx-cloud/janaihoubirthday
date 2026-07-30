@@ -67,8 +67,28 @@ def resolve_photo(filename: str) -> Path | None:
     return None
 
 
+def crop_to_portrait_3x4(image: Image.Image) -> Image.Image:
+    """Center-crop generated output to an exact 3:4 portrait ratio."""
+    image = image.convert("RGB")
+    width, height = image.size
+    target_ratio = 3 / 4
+    current_ratio = width / height
+
+    if current_ratio > target_ratio:
+        new_width = int(height * target_ratio)
+        left = max(0, (width - new_width) // 2)
+        image = image.crop((left, 0, left + new_width, height))
+    elif current_ratio < target_ratio:
+        new_height = int(width / target_ratio)
+        top = max(0, (height - new_height) // 2)
+        image = image.crop((0, top, width, top + new_height))
+
+    return image
+
+
 def add_watermark(image_bytes: bytes) -> bytes:
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+    image = Image.open(io.BytesIO(image_bytes))
+    image = crop_to_portrait_3x4(image).convert("RGBA")
     overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
 
@@ -143,6 +163,7 @@ def generate():
 Edit the supplied portrait photo according to this Japanese request: {user_prompt}
 Preserve the person's recognizable facial identity, facial features, hairstyle, and overall likeness as faithfully as possible.
 Create a polished, cute, joyful birthday-celebration image suitable for sharing on social media.
+Compose it as a vertical portrait. Keep the person, face, hairstyle, hands, and important props safely inside the central 3:4 frame so nothing important is cropped.
 Change clothing, pose, background, props, lighting, and atmosphere only as needed by the request.
 Do not add unreadable text, extra people, duplicated limbs, or distorted hands.
 Keep the result family-friendly and celebratory.{birthday_extras}
@@ -155,7 +176,7 @@ Keep the result family-friendly and celebratory.{birthday_extras}
                 model=MODEL,
                 image=image_file,
                 prompt=full_prompt,
-                size="1024x1024",
+                size="1024x1536",
                 quality=IMAGE_QUALITY,
                 output_format="jpeg",
             )

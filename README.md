@@ -24,3 +24,8 @@ pip install -r requirements.txt
 set OPENAI_API_KEY=sk-...
 python app.py
 ```
+
+
+## 写真の縦横比
+
+写真一覧・AI生成結果ともに **3:4の縦向き** に対応しています。元写真は3:4の縦写真を推奨します。AIは縦長で生成し、最終的に3:4へ整えて保存します。
