@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: janaihou-birthday-ai
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --timeout 180
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_IMAGE_MODEL
+        value: gpt-image-1-mini
+      - key: OPENAI_IMAGE_QUALITY
+        value: medium
+      - key: PER_IP_LIMIT
+        value: "3"
+      - key: TOTAL_LIMIT
+        value: "80"
