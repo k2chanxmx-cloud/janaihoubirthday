@@ -1,4 +1,5 @@
-Flask>=3.1,<4
-openai>=2.0,<3
-Pillow>=11,<13
-gunicorn>=23,<24
+Flask
+gunicorn
+openai
+Pillow
+python-dotenv
